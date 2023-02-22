@@ -4,10 +4,11 @@ import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.example.tmdbchallenge.MainActivityViewModel
 import com.example.tmdbchallenge.databinding.MovieItemBinding
 import com.example.tmdbchallenge.utilities.ImageHelper
 
-class MovieListingAdapter(private val listener: Listener) :
+class MovieListingAdapter(private val listener: Listener, private val viewModel: MainActivityViewModel) :
     RecyclerView.Adapter<MovieListingAdapter.MovieListingViewHolder>() {
 
     private val movies: MutableList<MovieListing> = mutableListOf()
@@ -25,7 +26,7 @@ class MovieListingAdapter(private val listener: Listener) :
             parent,
             false
         )
-        return MovieListingViewHolder(binding, listener)
+        return MovieListingViewHolder(binding, listener, viewModel)
     }
 
     override fun onBindViewHolder(holder: MovieListingViewHolder, position: Int) {
@@ -53,13 +54,14 @@ class MovieListingAdapter(private val listener: Listener) :
 
     class MovieListingViewHolder(
         private val binding: MovieItemBinding,
-        private val listener: Listener
+        private val listener: Listener,
+        private val viewModel: MainActivityViewModel
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(movieListing: MovieListing) {
-
             if (movieListing.poster_path != null && movieListing.poster_path != "") {
-                ImageHelper.loadImage(movieListing.poster_path, binding.poster)
+                val baseUrl = viewModel.getPosterUrl()
+                ImageHelper.loadImage(baseUrl + movieListing.poster_path, binding.poster)
             }
             binding.movieName.text = movieListing.title
             binding.releaseDate.text = movieListing.release_date

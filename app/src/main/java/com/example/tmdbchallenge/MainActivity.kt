@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         val recyclerView = binding.movieListRecyclerView
-        adapter = MovieListingAdapter(adapterListener)
+        adapter = MovieListingAdapter(adapterListener, viewModel)
         recyclerView.layoutManager = GridLayoutManager(this, 3)
         recyclerView.adapter = adapter
         recyclerView.setHasFixedSize(true)

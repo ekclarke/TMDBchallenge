@@ -12,5 +12,4 @@ object ImageHelper {
             .placeholder(R.drawable.baseline_movie)
             .into(view)
     }
-
 }

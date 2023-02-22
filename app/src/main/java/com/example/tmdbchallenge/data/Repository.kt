@@ -1,8 +1,5 @@
 package com.example.tmdbchallenge.data
 
-import com.example.tmdbchallenge.data.MovieDetails
-import com.example.tmdbchallenge.data.MovieListing
-import com.example.tmdbchallenge.data.RemoteDatasource
 import kotlinx.coroutines.flow.Flow
 
 class Repository {
@@ -16,7 +13,25 @@ class Repository {
         return remoteData.getMovieDetails(id)
     }
 
-    fun getMaxPages(): Int{
+    fun getMaxPages(): Int {
         return remoteData.maxPages
     }
+
+    suspend fun getConfig(): Flow<ConfigurationResponse> {
+        return remoteData.getConfig()
+    }
+
+    suspend fun getCredits(id: Int): Flow<List<Cast>> {
+        return remoteData.getCastList(id)
+    }
+
+    suspend fun getCastImages(id: Int): Flow<List<Image>> {
+        return remoteData.getCastImages(id)
+    }
+
+    suspend fun getMovieImages(id: Int): Flow<List<Image>>{
+        return remoteData.getMovieImages(id)
+    }
+
+
 }

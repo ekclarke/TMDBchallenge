@@ -12,7 +12,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
-//TODO: handle offline mode and other errors on the UI
+//TODO: handle network connectivity and other errors on the UI
 class RemoteDatasource {
     companion object {
         const val API_KEY = "5de8bf9fa1e91b52da0573d1e5263eb2"
@@ -74,6 +74,62 @@ class RemoteDatasource {
             if (call.isSuccessful) {
                 if (call.body() != null) {
                     emit(call.body()!!)
+                }
+            } else
+                Log.d("RemoteDatasource", "Error with api call")
+        }.flowOn(Dispatchers.IO)
+    }
+
+    suspend fun getCastList(id: Int): Flow<List<Cast>> {
+        return flow {
+            val request = buildService(MovieApi::class.java)
+            val call = request.getCredits(id, API_KEY)
+
+            if (call.isSuccessful) {
+                if (call.body() != null) {
+                    emit(call.body()!!.cast)
+                }
+            } else
+                Log.d("RemoteDatasource", "Error with api call")
+        }.flowOn(Dispatchers.IO)
+    }
+
+    suspend fun getConfig(): Flow<ConfigurationResponse> {
+        return flow {
+            val request = buildService(MovieApi::class.java)
+            val call = request.getConfig(API_KEY)
+
+            if (call.isSuccessful) {
+                if (call.body() != null) {
+                    emit(call.body()!!)
+                }
+            } else
+                Log.d("RemoteDatasource", "Error with api call")
+        }.flowOn(Dispatchers.IO)
+    }
+
+    suspend fun getCastImages(id: Int): Flow<List<Image>> {
+        return flow {
+            val request = buildService(MovieApi::class.java)
+            val call = request.getCastImages(id, API_KEY)
+
+            if (call.isSuccessful) {
+                if (call.body() != null) {
+                    emit(call.body()!!.profile)
+                }
+            } else
+                Log.d("RemoteDatasource", "Error with api call")
+        }.flowOn(Dispatchers.IO)
+    }
+
+    suspend fun getMovieImages(id: Int): Flow<List<Image>> {
+        return flow {
+            val request = buildService(MovieApi::class.java)
+            val call = request.getMovieImages(id, API_KEY)
+
+            if (call.isSuccessful) {
+                if (call.body() != null) {
+                    emit(call.body()!!.posters)
                 }
             } else
                 Log.d("RemoteDatasource", "Error with api call")

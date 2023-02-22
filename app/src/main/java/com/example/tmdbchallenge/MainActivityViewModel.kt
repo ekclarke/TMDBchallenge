@@ -42,4 +42,17 @@ class MainActivityViewModel : ViewModel() {
         } else if (page > limit) return true
         return false
     }
+
+    //TODO: fix redundancy
+    fun getPosterUrl(): String {
+        val url = ""
+        viewModelScope.launch {
+            repository.getConfig()
+                .collect {
+                   url.plus(it.images.secure_base_url)
+                    url.plus(it.images.poster_sizes.first())
+                }
+        }
+        return url
+    }
 }

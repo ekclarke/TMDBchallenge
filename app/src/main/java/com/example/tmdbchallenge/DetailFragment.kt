@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -19,6 +21,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.example.tmdbchallenge.data.Cast
+import com.example.tmdbchallenge.data.Image
 import com.example.tmdbchallenge.data.MovieDetails
 import com.example.tmdbchallenge.data.Repository
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -32,8 +36,10 @@ class DetailFragment : BottomSheetDialogFragment() {
         }
     }
 
-    lateinit var movie: State<MovieDetails?>
+    private lateinit var movie: State<MovieDetails?>
     lateinit var viewModel: DetailViewModel
+    private lateinit var castList: State<List<Cast>>
+    private lateinit var moviePosters: State<List<Image>>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -53,6 +59,8 @@ class DetailFragment : BottomSheetDialogFragment() {
     @Composable
     private fun MovieDetailScreen() {
         movie = viewModel.movieDetailsLiveData.observeAsState()
+        castList = viewModel.castListLiveData.observeAsState(initial = listOf())
+        moviePosters = viewModel.moviePostersLiveData.observeAsState(initial = listOf())
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -64,33 +72,26 @@ class DetailFragment : BottomSheetDialogFragment() {
                 .verticalScroll(rememberScrollState(), enabled = true)
             //No native scrollbar support at this time unfortunately!
         ) {
-
-            //Requirements: movie title, backdrop image,
-            // cast images
-            // related movie images
-
             movie.value?.let { Header(it) }
-            //ScrollingImageList(cast) //scrolling lazylist
-            //ScrollingImageList(otherimages) //scrolling lazylist
+            ScrollingCastList(castList.value)
+            ScrollingPostersList(moviePosters.value)
         }
     }
 
     @OptIn(ExperimentalGlideComposeApi::class)
     @Composable
     private fun Header(movie: MovieDetails) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxWidth(1F)
-                .padding(0.dp, 8.dp)
+        Box(
+            modifier = Modifier.fillMaxWidth(1F)
         ) {
-            if (movie.backdrop_path != null && movie.backdrop_path != "")
+            if (movie.backdrop_path != null && movie.backdrop_path != "") {
+                val baseUrl = viewModel.getBackdropUrl()
                 GlideImage(
-                    model = movie.backdrop_path,
+                    model = baseUrl + movie.backdrop_path,
                     contentDescription = "Movie backdrop",
                     Modifier.fillMaxWidth(1F)
                 )
-            else Image(
+            } else Image(
                 painter = painterResource(id = R.drawable.baseline_movie),
                 contentDescription = "Default movie icon",
                 Modifier.fillMaxWidth(1F)
@@ -100,4 +101,63 @@ class DetailFragment : BottomSheetDialogFragment() {
             )
         }
     }
+
+    @OptIn(ExperimentalGlideComposeApi::class)
+    @Composable
+    private fun ScrollingCastList(castList: List<Cast>) {
+        Text("Cast", style = MaterialTheme.typography.h4)
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()
+        ) {
+            items(castList) { item ->
+                val imageItem = viewModel.getCastImage(item.cast_id).first()
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (imageItem.file_path != "") {
+                        val baseUrl = viewModel.getProfileUrl()
+                        GlideImage(
+                            model = baseUrl + imageItem.file_path,
+                            contentDescription = "Cast image",
+                            Modifier.fillMaxWidth(.8F)
+                        )
+                    } else Image(
+                        painter = painterResource(id = R.drawable.baseline_person),
+                        contentDescription = "Default cast icon",
+                        Modifier.fillMaxWidth(.8F)
+                    )
+                    if (item.name != "") Text(
+                        text = item.name, style = MaterialTheme.typography.body1
+                    )
+                    if (item.character != "")
+                        Text(text = item.character, style = MaterialTheme.typography.body2)
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalGlideComposeApi::class)
+    @Composable
+    private fun ScrollingPostersList(postersList: List<Image>) {
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()
+        ) {
+            items(postersList) { item ->
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (item.file_path != "") {
+                        val baseUrl = viewModel.getPosterUrl()
+                        GlideImage(
+                            model = baseUrl + item.file_path,
+                            contentDescription = "Movie poster",
+                            Modifier.fillMaxWidth(.8F)
+                        )
+                    } else Image(
+                        painter = painterResource(id = R.drawable.baseline_poster),
+                        contentDescription = "Default poster icon",
+                        Modifier.fillMaxWidth(.8F)
+                    )
+                }
+            }
+        }
+    }
 }
+
+

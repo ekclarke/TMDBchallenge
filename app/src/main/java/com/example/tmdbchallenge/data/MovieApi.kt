@@ -14,12 +14,32 @@ interface MovieApi {
 
     @GET("/movie/{movie_id}")
     suspend fun getMovieDetails(
-        @Path("movie_id") movieId: Int,
+        @Path("movie_id") movie_id: Int,
         @Query("api_key") api_key: String
     ): Response<MovieDetails>
 
-    //TODO: get cast
-    //TODO: get cast images
+    @GET("/movie/{movie_id}/credits")
+    suspend fun getCredits(
+        @Path("movie_id") movie_id: Int,
+        @Query("api_key") api_key: String
+    ): Response<Credits>
+
+    @GET("/person/{person_id}/images")
+    suspend fun getCastImages(
+        @Path("person_id") person_id: Int,
+        @Query("api_key") api_key: String
+    ): Response<CastImageResponse>
+
+    @GET("/configuration")
+    suspend fun getConfig(
+        @Query("api_key") api_key: String
+    ): Response<ConfigurationResponse>
+
+    @GET("/movie/{movie_id}/images")
+    suspend fun getMovieImages(
+        @Path("movie_id") movie_id: Int,
+        @Query("api_key") api_key: String
+    ): Response<MovieImagesResponse>
 
 }
 
