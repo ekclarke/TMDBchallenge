@@ -18,6 +18,9 @@ interface MovieApi {
         @Query("api_key") api_key: String
     ): Response<MovieDetails>
 
+    //TODO: get cast
+    //TODO: get cast images
+
 }
 
 

@@ -18,7 +18,7 @@ class RemoteDatasource {
         const val API_KEY = "5de8bf9fa1e91b52da0573d1e5263eb2"
     }
 
-    private var maxPages = -1
+    var maxPages = -1
 
     private val client: OkHttpClient =
         OkHttpClient.Builder()
