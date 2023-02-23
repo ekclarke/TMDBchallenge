@@ -67,13 +67,12 @@ class DetailFragment : BottomSheetDialogFragment() {
                 Context.MODE_PRIVATE
             )
 
-            if(activity?.let {OnlineHelper.isOnline(it) } == true) {
+            if (activity?.let { OnlineHelper.isOnline(it) } == true) {
                 viewModel.refreshData(requireActivity())
                 setContent {
                     MovieDetailScreen()
                 }
-            }
-            else activity?.let { OnlineHelper.showOnlineDialog(it) }
+            } else activity?.let { OnlineHelper.showOnlineDialog(it) }
         }
     }
 
@@ -130,30 +129,30 @@ class DetailFragment : BottomSheetDialogFragment() {
 
             if (movie.backdrop_path != null && movie.backdrop_path != "") {
                 val backdropUrl = context?.let { ImageHelper.getBackdropUrl(it, 3) }
-                if (backdropUrl != "" && backdropUrl != null) {
-                    matchImage = true
-                    GlideImage(
-                        model = backdropUrl + movie.backdrop_path,
-                        contentDescription = "Movie backdrop",
-                        contentScale = ContentScale.FillHeight,
-                        modifier = Modifier
-                            .onGloballyPositioned { coordinates ->
-                                imageHeight = with(localDensity) { coordinates.size.height.toDp() }
-                            })
+                matchImage = true
+                GlideImage(
+                    model = backdropUrl + movie.backdrop_path,
+                    contentDescription = "Movie backdrop",
+                    contentScale = ContentScale.FillHeight,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .onGloballyPositioned { coordinates ->
+                            imageHeight = with(localDensity) { coordinates.size.height.toDp() }
+                        }) {
+                    it.fallback(R.drawable.baseline_movie)
+                        .placeholder(R.drawable.baseline_movie)
                 }
-            } else Image(
-                painter = painterResource(id = R.drawable.baseline_movie),
-                contentDescription = "Default movie icon",
-                Modifier.fillMaxWidth(1F)
-            )
+            }
             Column(
                 if (matchImage) Modifier
                     .background(gradient)
                     .fillMaxWidth()
                     .height(imageHeight)
+                    .align(Alignment.TopCenter)
                 else Modifier
                     .background(gradient)
                     .fillMaxWidth()
+                    .align(Alignment.TopCenter)
             ) {
                 if (movie.title != "") Text(
                     text = movie.title,
@@ -244,20 +243,16 @@ class DetailFragment : BottomSheetDialogFragment() {
                     val castImage = castImages.value[castMember.order]
                     if (castImage != null) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            if (castImage.file_path != "") {
-                                val profileUrl =
-                                    context?.let { ImageHelper.getProfileUrl(it, 3) }
-                                if (profileUrl != "" && profileUrl != null)
-                                    GlideImage(
-                                        model = profileUrl + castImage.file_path,
-                                        contentDescription = "Cast member image",
-                                        Modifier.fillMaxWidth(.8F)
-                                    )
-                            } else Image(
-                                painter = painterResource(id = R.drawable.baseline_person),
-                                contentDescription = "Default cast member icon",
+                            val profileUrl =
+                                context?.let { ImageHelper.getProfileUrl(it, 3) }
+                            GlideImage(
+                                model = profileUrl + castImage.file_path,
+                                contentDescription = "Cast member image",
                                 Modifier.fillMaxWidth(.8F)
-                            )
+                            ) {
+                                it.fallback(R.drawable.baseline_person)
+                                    .placeholder(R.drawable.baseline_person)
+                            }
                             if (castMember.name != "") {
                                 Text(
                                     text = castMember.name,
@@ -294,24 +289,22 @@ class DetailFragment : BottomSheetDialogFragment() {
             ) {
                 items(postersList) { item ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        if (item.file_path != "") {
-                            val posterUrl =
-                                context?.let { ImageHelper.getPosterUrl(it, 1) }
-                            if (posterUrl != "" && posterUrl != null)
-                                GlideImage(
-                                    model = posterUrl + item.file_path,
-                                    contentDescription = "Movie poster"
-                                )
-                        } else Image(
-                            painter = painterResource(id = R.drawable.baseline_poster),
-                            contentDescription = "Default poster icon"
-                        )
+                        val posterUrl =
+                            context?.let { ImageHelper.getPosterUrl(it, 1) }
+                        GlideImage(
+                            model = posterUrl + item.file_path,
+                            contentDescription = "Movie poster"
+                        ) {
+                            it.fallback(R.drawable.baseline_poster)
+                                .placeholder(R.drawable.baseline_poster)
+                        }
                     }
                 }
             }
         }
     }
 }
+
 
 interface OnClosedListener {
     fun onCancel()
