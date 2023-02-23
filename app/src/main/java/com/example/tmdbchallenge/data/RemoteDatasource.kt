@@ -37,7 +37,7 @@ class RemoteDatasource {
         .build()
 
     private val retrofit = Retrofit.Builder()
-        .baseUrl("https://api.themoviedb.org/3")
+        .baseUrl("https://api.themoviedb.org/")
         .addConverterFactory(MoshiConverterFactory.create(moshi))
         .client(client)
         .build()
@@ -94,20 +94,6 @@ class RemoteDatasource {
         }.flowOn(Dispatchers.IO)
     }
 
-    suspend fun getConfig(): Flow<ConfigurationResponse> {
-        return flow {
-            val request = buildService(MovieApi::class.java)
-            val call = request.getConfig(API_KEY)
-
-            if (call.isSuccessful) {
-                if (call.body() != null) {
-                    emit(call.body()!!)
-                }
-            } else
-                Log.d("RemoteDatasource", "Error with api call")
-        }.flowOn(Dispatchers.IO)
-    }
-
     suspend fun getCastImages(id: Int): Flow<List<Image>> {
         return flow {
             val request = buildService(MovieApi::class.java)
@@ -115,7 +101,7 @@ class RemoteDatasource {
 
             if (call.isSuccessful) {
                 if (call.body() != null) {
-                    emit(call.body()!!.profile)
+                    emit(call.body()!!.profiles)
                 }
             } else
                 Log.d("RemoteDatasource", "Error with api call")
@@ -130,6 +116,21 @@ class RemoteDatasource {
             if (call.isSuccessful) {
                 if (call.body() != null) {
                     emit(call.body()!!.posters)
+                }
+            } else
+                Log.d("RemoteDatasource", "Error with api call")
+        }.flowOn(Dispatchers.IO)
+    }
+
+    //TODO: cache in sharedprefs
+    suspend fun getConfig(): Flow<ConfigurationResponse> {
+        return flow {
+            val request = buildService(MovieApi::class.java)
+            val call = request.getConfig(API_KEY)
+
+            if (call.isSuccessful) {
+                if (call.body() != null) {
+                    emit(call.body()!!)
                 }
             } else
                 Log.d("RemoteDatasource", "Error with api call")

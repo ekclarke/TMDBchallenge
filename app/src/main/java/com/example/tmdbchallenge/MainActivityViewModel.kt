@@ -43,16 +43,8 @@ class MainActivityViewModel : ViewModel() {
         return false
     }
 
-    //TODO: fix redundancy
+    //TODO: update
     fun getPosterUrl(): String {
-        val url = ""
-        viewModelScope.launch {
-            repository.getConfig()
-                .collect {
-                   url.plus(it.images.secure_base_url)
-                    url.plus(it.images.poster_sizes.first())
-                }
-        }
-        return url
+        return "https://image.tmdb.org/t/p/w342/"
     }
 }

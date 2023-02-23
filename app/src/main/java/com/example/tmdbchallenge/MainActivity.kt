@@ -23,6 +23,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //TODO: action bar design
+    //TODO: bind rating instead of title?
+    //TODO: parse date so it looks nicer
+    //TODO: marquee scrolling or text resizing?
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

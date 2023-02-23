@@ -4,10 +4,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.tmdbchallenge.data.*
+import com.example.tmdbchallenge.data.Cast
+import com.example.tmdbchallenge.data.Image
+import com.example.tmdbchallenge.data.MovieDetails
+import com.example.tmdbchallenge.data.Repository
 import kotlinx.coroutines.launch
 
 class DetailViewModel(private val repo: Repository, val id: Int) : ViewModel() {
+
     private val _movieDetailsLiveData = MutableLiveData<MovieDetails>()
     val movieDetailsLiveData: LiveData<MovieDetails> = _movieDetailsLiveData
 
@@ -16,6 +20,10 @@ class DetailViewModel(private val repo: Repository, val id: Int) : ViewModel() {
 
     private val _moviePostersLiveData = MutableLiveData<List<Image>>()
     val moviePostersLiveData: LiveData<List<Image>> = _moviePostersLiveData
+
+    private val privateList = mutableListOf<Image?>()
+    private val _castImagesLiveData = MutableLiveData<List<Image?>>(privateList)
+    val castImagesLiveData: LiveData<List<Image?>> = _castImagesLiveData
 
     init {
         refreshData()
@@ -33,6 +41,18 @@ class DetailViewModel(private val repo: Repository, val id: Int) : ViewModel() {
             repo.getCredits(id)
                 .collect {
                     _castListLiveData.postValue(it)
+                    val castIdList: List<Int> = it.map { cast -> cast.id }
+                    privateList.clear()
+
+                    for (id in castIdList) {
+                        var castImage: Image? = null
+                        repo.getCastImages(id)
+                            .collect { list ->
+                                castImage = list.firstOrNull()
+                            }
+                        privateList.add(castImage)
+                    }
+                    _castImagesLiveData.value = privateList
                 }
         }
         viewModelScope.launch {
@@ -41,53 +61,5 @@ class DetailViewModel(private val repo: Repository, val id: Int) : ViewModel() {
                     _moviePostersLiveData.postValue(it)
                 }
         }
-    }
-
-    fun getCastImage(id: Int): List<Image> {
-        var castImageList = listOf<Image>()
-        viewModelScope.launch {
-            repo.getCastImages(id)
-                .collect {
-                    castImageList = it
-                }
-        }
-        return castImageList
-    }
-
-    fun getBackdropUrl(): String {
-        val url = ""
-        viewModelScope.launch {
-            repo.getConfig()
-                .collect {
-                    url.plus(it.images.secure_base_url)
-                    url.plus(it.images.backdrop_sizes.first())
-                }
-        }
-        return url
-    }
-
-    fun getProfileUrl(): String {
-        val url = ""
-        viewModelScope.launch {
-            repo.getConfig()
-                .collect {
-                    url.plus(it.images.secure_base_url)
-                    url.plus(it.images.profile_sizes.first())
-                }
-        }
-        return url
-    }
-
-    //TODO: fix redundancy
-    fun getPosterUrl(): String {
-        val url = ""
-        viewModelScope.launch {
-            repo.getConfig()
-                .collect {
-                    url.plus(it.images.secure_base_url)
-                    url.plus(it.images.profile_sizes.first())
-                }
-        }
-        return url
     }
 }

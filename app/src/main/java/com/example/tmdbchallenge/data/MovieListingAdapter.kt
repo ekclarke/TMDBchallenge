@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tmdbchallenge.MainActivityViewModel
 import com.example.tmdbchallenge.databinding.MovieItemBinding
+import com.example.tmdbchallenge.utilities.DateHelper
 import com.example.tmdbchallenge.utilities.ImageHelper
 
 class MovieListingAdapter(private val listener: Listener, private val viewModel: MainActivityViewModel) :
@@ -64,7 +65,7 @@ class MovieListingAdapter(private val listener: Listener, private val viewModel:
                 ImageHelper.loadImage(baseUrl + movieListing.poster_path, binding.poster)
             }
             binding.movieName.text = movieListing.title
-            binding.releaseDate.text = movieListing.release_date
+            binding.releaseDate.text = DateHelper.getReleaseYear(movieListing.release_date, binding.root.context)
 
             binding.root.setOnClickListener {
                 listener.onMovieClicked(movieListing.id)
