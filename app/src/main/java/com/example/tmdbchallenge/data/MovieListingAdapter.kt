@@ -4,12 +4,13 @@ import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.example.tmdbchallenge.MainActivityViewModel
 import com.example.tmdbchallenge.databinding.MovieItemBinding
 import com.example.tmdbchallenge.utilities.DateHelper
 import com.example.tmdbchallenge.utilities.ImageHelper
 
-class MovieListingAdapter(private val listener: Listener, private val viewModel: MainActivityViewModel) :
+class MovieListingAdapter(
+    private val listener: Listener
+) :
     RecyclerView.Adapter<MovieListingAdapter.MovieListingViewHolder>() {
 
     private val movies: MutableList<MovieListing> = mutableListOf()
@@ -27,7 +28,7 @@ class MovieListingAdapter(private val listener: Listener, private val viewModel:
             parent,
             false
         )
-        return MovieListingViewHolder(binding, listener, viewModel)
+        return MovieListingViewHolder(binding, listener)
     }
 
     override fun onBindViewHolder(holder: MovieListingViewHolder, position: Int) {
@@ -56,19 +57,25 @@ class MovieListingAdapter(private val listener: Listener, private val viewModel:
     class MovieListingViewHolder(
         private val binding: MovieItemBinding,
         private val listener: Listener,
-        private val viewModel: MainActivityViewModel
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(movieListing: MovieListing) {
             if (movieListing.poster_path != null && movieListing.poster_path != "") {
-                val baseUrl = viewModel.getPosterUrl()
-                ImageHelper.loadImage(baseUrl + movieListing.poster_path, binding.poster)
+                val posterUrl = ImageHelper.getPosterUrl(itemView.context, 3)
+                if (posterUrl != "")
+                    ImageHelper.loadImage(
+                        posterUrl + movieListing.poster_path,
+                        binding.poster
+                    )
             }
-            binding.movieName.text = movieListing.title
-            binding.releaseDate.text = DateHelper.getReleaseYear(movieListing.release_date, binding.root.context)
+            else {
+                binding.movieName.text = movieListing.title
+                binding.releaseDate.text =
+                    DateHelper.getReleaseYear(movieListing.release_date, binding.root.context)
 
-            binding.root.setOnClickListener {
-                listener.onMovieClicked(movieListing.id)
+                binding.root.setOnClickListener {
+                    listener.onMovieClicked(movieListing.id)
+                }
             }
         }
     }

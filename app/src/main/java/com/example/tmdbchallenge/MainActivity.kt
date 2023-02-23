@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,15 +19,9 @@ class MainActivity : AppCompatActivity() {
 
     private val adapterListener = object : MovieListingAdapter.Listener {
         override fun onMovieClicked(id: Int) {
-            val movieDetailFragment = DetailFragment.newInstance(id, viewModel.repository)
-            movieDetailFragment.show(supportFragmentManager, null)
+            viewModel.updateActiveMovie(id)
         }
     }
-
-    //TODO: action bar design
-    //TODO: bind rating instead of title?
-    //TODO: parse date so it looks nicer
-    //TODO: marquee scrolling or text resizing?
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,11 +29,13 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         val recyclerView = binding.movieListRecyclerView
-        adapter = MovieListingAdapter(adapterListener, viewModel)
+        adapter = MovieListingAdapter(adapterListener)
         recyclerView.layoutManager = GridLayoutManager(this, 3)
         recyclerView.adapter = adapter
         recyclerView.setHasFixedSize(true)
 
+        viewModel.isOnline(this)
+        viewModel.configure(this)
         initLivedata()
         refreshData()
         initListeners(recyclerView)
@@ -53,11 +50,26 @@ class MainActivity : AppCompatActivity() {
                 binding.loadingIndicator.visibility = View.VISIBLE
             else binding.loadingIndicator.visibility = View.GONE
         }
+        viewModel.activeMovieId.observe(this) { id ->
+            if (id > 0) {
+                showMovieDetails(id)
+            }
+        }
+        viewModel.onlineLiveData.observe(this) { status ->
+            if (status == false) {
+                val builder = AlertDialog.Builder(this)
+                builder.setMessage("Oops! It looks like you're offline.")
+                    .setCancelable(false)
+                    .setPositiveButton("Check again"
+                    ) { _, _ -> viewModel.isOnline(this) }
+                val alert: AlertDialog = builder.create()
+                alert.show()
+            }
+        }
     }
 
     private fun refreshData() {
-        viewModel.getMovieList()
-        if (viewModel.getMovieList()) Toast.makeText(
+        if (viewModel.getMovieList(this)) Toast.makeText(
             this@MainActivity,
             "All data loaded.",
             Toast.LENGTH_SHORT
@@ -74,4 +86,19 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
+    private fun showMovieDetails(id: Int) {
+        val movieDetailFragment =
+            DetailFragment.newInstance(id, viewModel.repository, object : OnClosedListener {
+                override fun onCancel() {
+                    viewModel.clearActiveMovie()
+                }
+
+                override fun onDismiss() {
+                    //do nothing - the active movie will still be saved
+                }
+            })
+        movieDetailFragment.show(supportFragmentManager, null)
+    }
+
 }

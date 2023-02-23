@@ -1,5 +1,8 @@
 package com.example.tmdbchallenge
 
+import android.content.Context
+import android.content.DialogInterface
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -26,13 +29,17 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.tmdbchallenge.data.*
 import com.example.tmdbchallenge.utilities.DateHelper
+import com.example.tmdbchallenge.utilities.ImageHelper
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import java.util.*
 
+
 class DetailFragment : BottomSheetDialogFragment() {
+
     companion object {
-        fun newInstance(id: Int, repo: Repository): DetailFragment {
+        fun newInstance(id: Int, repo: Repository, listener: OnClosedListener): DetailFragment {
             val detailFragment = DetailFragment()
+            detailFragment.listener = listener
             detailFragment.viewModel = DetailViewModel(repo, id)
             return detailFragment
         }
@@ -43,6 +50,8 @@ class DetailFragment : BottomSheetDialogFragment() {
     private lateinit var castList: State<List<Cast>>
     private lateinit var moviePosters: State<List<Image>>
     private lateinit var castImages: State<List<Image?>>
+    private lateinit var listener: OnClosedListener
+    private lateinit var sharedPrefs: SharedPreferences
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -53,10 +62,26 @@ class DetailFragment : BottomSheetDialogFragment() {
                     viewLifecycleOwner
                 )
             )
+            sharedPrefs = this.context.getSharedPreferences(
+                this.context.getString(R.string.prefs_key),
+                Context.MODE_PRIVATE
+            )
+
+            viewModel.refreshData(this.context)
             setContent {
                 MovieDetailScreen()
             }
         }
+    }
+
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+        listener.onDismiss()
+    }
+
+    override fun onCancel(dialog: DialogInterface) {
+        super.onCancel(dialog)
+        listener.onCancel()
     }
 
     @Composable
@@ -77,7 +102,7 @@ class DetailFragment : BottomSheetDialogFragment() {
             //No native scrollbar support at this time unfortunately!
         ) {
             movie.value?.let { Header(it) }
-            ScrollingCastList(castList.value)
+            ScrollingCastList(castList.value, castImages.value)
             ScrollingPostersList(moviePosters.value)
         }
     }
@@ -96,14 +121,15 @@ class DetailFragment : BottomSheetDialogFragment() {
                 .fillMaxWidth(1F)
         ) {
             if (movie.backdrop_path != null && movie.backdrop_path != "") {
-                val imageUrl = "https://image.tmdb.org/t/p/w1280" + movie.backdrop_path
-                GlideImage(
-                    model = imageUrl,
-                    contentDescription = "Movie backdrop",
-                    Modifier
-                        .fillMaxWidth(1F)
-                        .align(Alignment.TopCenter)
-                )
+                val backdropUrl = context?.let { ImageHelper.getBackdropUrl(it, 4) }
+                if (backdropUrl != "")
+                    GlideImage(
+                        model = backdropUrl + movie.backdrop_path,
+                        contentDescription = "Movie backdrop",
+                        Modifier
+                            .fillMaxWidth(1F)
+                            .align(Alignment.TopCenter)
+                    )
             } else Image(
                 painter = painterResource(id = R.drawable.baseline_movie),
                 contentDescription = "Default movie icon",
@@ -154,46 +180,71 @@ class DetailFragment : BottomSheetDialogFragment() {
 
     @OptIn(ExperimentalGlideComposeApi::class)
     @Composable
-    private fun ScrollingCastList(castList: List<Cast>) {
-        if (castList.isNotEmpty()) {
+    private fun ScrollingCastList(castList: List<Cast>, imageList: List<Image?>) {
+        if (imageList.isEmpty() && castList.isNotEmpty()) {
             Text("Cast", style = MaterialTheme.typography.h6)
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                //TODO: Look into loading placeholders
-                //TODO: make castImages a parameter and/or mapping
                 items(castList) { castMember ->
-                    if (castImages.value.isNotEmpty()) {
-                        val castImage = castImages.value[castMember.order]
-                        if (castImage != null) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                if (castImage.file_path != "") {
-                                    val url =
-                                        "https://image.tmdb.org/t/p/w185" + castImage.file_path
+                    Image(
+                        painter = painterResource(id = R.drawable.baseline_person),
+                        contentDescription = "Default cast member icon",
+                        Modifier.fillMaxWidth(.8F)
+                    )
+                    if (castMember.name != "") {
+                        Text(
+                            text = castMember.name,
+                            style = MaterialTheme.typography.body1
+                        )
+
+                    }
+                    if (castMember.character != "") {
+                        Text(
+                            text = castMember.character,
+                            style = MaterialTheme.typography.body2
+                        )
+                    }
+                }
+            }
+        } else if (imageList.isNotEmpty() && castList.isNotEmpty()) {
+            Text("Cast", style = MaterialTheme.typography.h6)
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+            {
+                items(castList) { castMember ->
+                    val castImage = castImages.value[castMember.order]
+                    if (castImage != null) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            if (castImage.file_path != "") {
+                                val profileUrl =
+                                    context?.let { ImageHelper.getProfileUrl(it, 2) }
+                                if (profileUrl != "")
                                     GlideImage(
-                                        model = url,
+                                        model = profileUrl + castImage.file_path,
                                         contentDescription = "Cast member image",
                                         Modifier.fillMaxWidth(.8F)
                                     )
-                                } else Image(
-                                    painter = painterResource(id = R.drawable.baseline_person),
-                                    contentDescription = "Default cast member icon",
-                                    Modifier.fillMaxWidth(.8F)
+                            } else Image(
+                                painter = painterResource(id = R.drawable.baseline_person),
+                                contentDescription = "Default cast member icon",
+                                Modifier.fillMaxWidth(.8F)
+                            )
+                            if (castMember.name != "") {
+                                Text(
+                                    text = castMember.name,
+                                    style = MaterialTheme.typography.body1
                                 )
-                                if (castMember.name != "") {
-                                    Text(
-                                        text = castMember.name,
-                                        style = MaterialTheme.typography.body1
-                                    )
 
-                                }
-                                if (castMember.character != "") {
-                                    Text(
-                                        text = castMember.character,
-                                        style = MaterialTheme.typography.body2
-                                    )
-                                }
+                            }
+                            if (castMember.character != "") {
+                                Text(
+                                    text = castMember.character,
+                                    style = MaterialTheme.typography.body2
+                                )
                             }
                         }
                     }
@@ -214,12 +265,14 @@ class DetailFragment : BottomSheetDialogFragment() {
                 items(postersList) { item ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         if (item.file_path != "") {
-                            val baseUrl = "https://image.tmdb.org/t/p/w185"
-                            GlideImage(
-                                model = baseUrl + item.file_path,
-                                contentDescription = "Movie poster",
-                                Modifier.fillMaxWidth(.8F)
-                            )
+                            val posterUrl =
+                                context?.let { ImageHelper.getPosterUrl(it, 1) }
+                            if (posterUrl != "")
+                                GlideImage(
+                                    model = posterUrl + item.file_path,
+                                    contentDescription = "Movie poster",
+                                    Modifier.fillMaxWidth(.8F)
+                                )
                         } else Image(
                             painter = painterResource(id = R.drawable.baseline_poster),
                             contentDescription = "Default poster icon",
@@ -230,6 +283,11 @@ class DetailFragment : BottomSheetDialogFragment() {
             }
         }
     }
+}
+
+interface OnClosedListener {
+    fun onCancel()
+    fun onDismiss()
 }
 
 

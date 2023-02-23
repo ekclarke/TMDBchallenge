@@ -1,5 +1,6 @@
 package com.example.tmdbchallenge
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -25,20 +26,15 @@ class DetailViewModel(private val repo: Repository, val id: Int) : ViewModel() {
     private val _castImagesLiveData = MutableLiveData<List<Image?>>(privateList)
     val castImagesLiveData: LiveData<List<Image?>> = _castImagesLiveData
 
-    init {
-        refreshData()
-    }
-
-    //TODO: streamline with await/async calls
-    private fun refreshData() {
+    fun refreshData(context: Context) {
         viewModelScope.launch {
-            repo.getMovieDetails(id)
+            repo.getMovieDetails(id, context)
                 .collect {
                     _movieDetailsLiveData.postValue(it)
                 }
         }
         viewModelScope.launch {
-            repo.getCredits(id)
+            repo.getCredits(id, context)
                 .collect {
                     _castListLiveData.postValue(it)
                     val castIdList: List<Int> = it.map { cast -> cast.id }
@@ -46,7 +42,7 @@ class DetailViewModel(private val repo: Repository, val id: Int) : ViewModel() {
 
                     for (id in castIdList) {
                         var castImage: Image? = null
-                        repo.getCastImages(id)
+                        repo.getCastImages(id, context)
                             .collect { list ->
                                 castImage = list.firstOrNull()
                             }
@@ -56,7 +52,7 @@ class DetailViewModel(private val repo: Repository, val id: Int) : ViewModel() {
                 }
         }
         viewModelScope.launch {
-            repo.getMovieImages(id)
+            repo.getMovieImages(id, context)
                 .collect {
                     _moviePostersLiveData.postValue(it)
                 }

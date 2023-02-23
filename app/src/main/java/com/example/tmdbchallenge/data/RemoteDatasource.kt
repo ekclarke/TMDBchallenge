@@ -1,6 +1,10 @@
 package com.example.tmdbchallenge.data
 
+import android.app.Activity
+import android.content.Context
 import android.util.Log
+import com.example.tmdbchallenge.R
+import com.example.tmdbchallenge.utilities.ToastHelper
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +16,6 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
-//TODO: handle network connectivity and other errors on the UI
 class RemoteDatasource {
     companion object {
         const val API_KEY = "5de8bf9fa1e91b52da0573d1e5263eb2"
@@ -46,7 +49,7 @@ class RemoteDatasource {
         return retrofit.create(service)
     }
 
-    suspend fun getPopularMovies(page: Int): Flow<List<MovieListing>> {
+    suspend fun getPopularMovies(page: Int, context: Context): Flow<List<MovieListing>> {
         return flow {
             val request = buildService(MovieApi::class.java)
             val call = request.getPopularMovies(page, API_KEY)
@@ -61,12 +64,12 @@ class RemoteDatasource {
                     movies = call.body()!!.results
                 }
             } else
-                Log.d("RemoteDatasource", "Error with api call")
+                ToastHelper.showErrorToast(context, "movies")
             emit(movies)
         }.flowOn(Dispatchers.IO)
     }
 
-    suspend fun getMovieDetails(id: Int): Flow<MovieDetails> {
+    suspend fun getMovieDetails(id: Int, context: Context): Flow<MovieDetails> {
         return flow {
             val request = buildService(MovieApi::class.java)
             val call = request.getMovieDetails(id, API_KEY)
@@ -76,11 +79,11 @@ class RemoteDatasource {
                     emit(call.body()!!)
                 }
             } else
-                Log.d("RemoteDatasource", "Error with api call")
+                ToastHelper.showErrorToast(context, "movie details")
         }.flowOn(Dispatchers.IO)
     }
 
-    suspend fun getCastList(id: Int): Flow<List<Cast>> {
+    suspend fun getCastList(id: Int, context: Context): Flow<List<Cast>> {
         return flow {
             val request = buildService(MovieApi::class.java)
             val call = request.getCredits(id, API_KEY)
@@ -90,11 +93,11 @@ class RemoteDatasource {
                     emit(call.body()!!.cast)
                 }
             } else
-                Log.d("RemoteDatasource", "Error with api call")
+                ToastHelper.showErrorToast(context, "cast list")
         }.flowOn(Dispatchers.IO)
     }
 
-    suspend fun getCastImages(id: Int): Flow<List<Image>> {
+    suspend fun getCastImages(id: Int, context: Context): Flow<List<Image>> {
         return flow {
             val request = buildService(MovieApi::class.java)
             val call = request.getCastImages(id, API_KEY)
@@ -104,11 +107,12 @@ class RemoteDatasource {
                     emit(call.body()!!.profiles)
                 }
             } else
-                Log.d("RemoteDatasource", "Error with api call")
+                ToastHelper.showErrorToast(context, "cast images")
+
         }.flowOn(Dispatchers.IO)
     }
 
-    suspend fun getMovieImages(id: Int): Flow<List<Image>> {
+    suspend fun getMovieImages(id: Int, context: Context): Flow<List<Image>> {
         return flow {
             val request = buildService(MovieApi::class.java)
             val call = request.getMovieImages(id, API_KEY)
@@ -118,22 +122,58 @@ class RemoteDatasource {
                     emit(call.body()!!.posters)
                 }
             } else
-                Log.d("RemoteDatasource", "Error with api call")
+                ToastHelper.showErrorToast(context, "movie images")
+
         }.flowOn(Dispatchers.IO)
     }
 
-    //TODO: cache in sharedprefs
-    suspend fun getConfig(): Flow<ConfigurationResponse> {
+    suspend fun getConfig(activity: Activity?): Flow<ConfigurationResponse> {
+        val sharedPref =
+            activity?.getSharedPreferences(
+                activity.getString(R.string.prefs_key),
+                Context.MODE_PRIVATE
+            )
         return flow {
             val request = buildService(MovieApi::class.java)
             val call = request.getConfig(API_KEY)
 
             if (call.isSuccessful) {
                 if (call.body() != null) {
+                    val config = call.body()!!.images
+                    if (sharedPref != null) {
+                        with(sharedPref.edit()) {
+                            putString(
+                                activity.getString(R.string.base_url_key),
+                                config.base_url
+                            )
+                            putString(
+                                activity.getString(R.string.secure_base_url_key),
+                                config.secure_base_url
+                            )
+                            putStringSet(
+                                activity.getString(R.string.backdrop_sizes_key),
+                                config.backdrop_sizes.toMutableSet()
+                            )
+                            putStringSet(
+                                activity.getString(R.string.poster_sizes_key),
+                                config.poster_sizes.toMutableSet()
+                            )
+                            putStringSet(
+                                activity.getString(R.string.profile_sizes_key),
+                                config.profile_sizes.toMutableSet()
+                            )
+                            apply()
+                        }
+                    }
                     emit(call.body()!!)
                 }
             } else
-                Log.d("RemoteDatasource", "Error with api call")
+                activity?.applicationContext?.let {
+                    ToastHelper.showErrorToast(
+                        it,
+                        "image configuration"
+                    )
+                }
         }.flowOn(Dispatchers.IO)
     }
 }

@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/yellow_100"
-    android:padding="12dp">
+    android:background="@color/yellow_100">
 
     <ImageView
         android:id="@+id/poster"
@@ -18,34 +17,37 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/baseline_movie" />
 
-    <TextView
-        android:id="@+id/movie_name"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:ellipsize="marquee"
-        android:marqueeRepeatLimit="marquee_forever"
-        android:maxLines="1"
-        android:textAlignment="center"
-        android:textAppearance="?attr/textAppearanceHeadline6"
-        android:textColor="@color/blue_900"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/poster"
-        tools:text="Lord of the Rings: The Two Towers" />
-
-    <TextView
-        android:id="@+id/release_date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAlignment="center"
-        android:textAppearance="?attr/textAppearanceSubtitle1"
-        android:textColor="@color/blue_900"
+    <LinearLayout
+        android:id="@+id/text_only_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/movie_name"
-        tools:text="December 18, 2002" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:orientation="vertical">
 
+        <TextView
+            android:id="@+id/movie_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:maxLines="3"
+            android:textAlignment="center"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:textColor="@color/blue_900"
+            tools:text="Lord of the Rings: The Two Towers" />
+
+        <TextView
+            android:id="@+id/release_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:textAppearance="?attr/textAppearanceSubtitle1"
+            android:textColor="@color/blue_900"
+            android:maxLines="1"
+            tools:text="December 18, 2002" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

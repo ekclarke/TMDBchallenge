@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">TMDBchallenge</string>
+    <string name="app_title">TheMovieDB Challenge</string>
     <string name="movie_poster_thumbnail">Movie poster thumbnail</string>
+    <string name="base_url_key">base_url</string>
+    <string name="secure_base_url_key">secure_base_url</string>
+    <string name="backdrop_sizes_key">backdrop_sizes</string>
+    <string name="poster_sizes_key">poster_sizes</string>
+    <string name="profile_sizes_key">profile_sizes</string>
+    <string name="prefs_key">com.example.tmdbchallenge.prefs</string>
 </resources>
