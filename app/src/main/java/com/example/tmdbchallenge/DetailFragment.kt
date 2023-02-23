@@ -29,6 +29,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.example.tmdbchallenge.data.*
 import com.example.tmdbchallenge.utilities.DateHelper
 import com.example.tmdbchallenge.utilities.ImageHelper
+import com.example.tmdbchallenge.utilities.OnlineHelper
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import java.util.*
 
@@ -66,10 +67,13 @@ class DetailFragment : BottomSheetDialogFragment() {
                 Context.MODE_PRIVATE
             )
 
-            viewModel.refreshData(this.context)
-            setContent {
-                MovieDetailScreen()
+            if(activity?.let {OnlineHelper.isOnline(it) } == true) {
+                viewModel.refreshData(requireActivity())
+                setContent {
+                    MovieDetailScreen()
+                }
             }
+            else activity?.let { OnlineHelper.showOnlineDialog(it) }
         }
     }
 

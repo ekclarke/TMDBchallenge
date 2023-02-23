@@ -4,12 +4,12 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tmdbchallenge.data.MovieListingAdapter
 import com.example.tmdbchallenge.databinding.ActivityMainBinding
+import com.example.tmdbchallenge.utilities.OnlineHelper
 
 
 class MainActivity : AppCompatActivity() {
@@ -27,19 +27,20 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        val recyclerView = binding.movieListRecyclerView
-        adapter = MovieListingAdapter(adapterListener)
-        recyclerView.layoutManager = GridLayoutManager(this, 3)
-        recyclerView.adapter = adapter
-        recyclerView.setHasFixedSize(true)
-
-        viewModel.isOnline(this)
-        viewModel.configure(this)
-        initLivedata()
-        refreshData()
-        initListeners(recyclerView)
+        if(OnlineHelper.isOnline(this)) {
+            binding = ActivityMainBinding.inflate(layoutInflater)
+            setContentView(binding.root)
+            val recyclerView = binding.movieListRecyclerView
+            adapter = MovieListingAdapter(adapterListener)
+            recyclerView.layoutManager = GridLayoutManager(this, 3)
+            recyclerView.adapter = adapter
+            recyclerView.setHasFixedSize(true)
+            viewModel.configure(this)
+            initLivedata()
+            refreshData()
+            initListeners(recyclerView)
+        }
+        else OnlineHelper.showOnlineDialog(this)
     }
 
     private fun initLivedata() {
@@ -65,19 +66,8 @@ class MainActivity : AppCompatActivity() {
                 showMovieDetails(id)
             }
         }
-        viewModel.onlineLiveData.observe(this) { status ->
-            if (status == false) {
-                val builder = AlertDialog.Builder(this)
-                builder.setMessage("Oops! It looks like you're offline.")
-                    .setCancelable(false)
-                    .setPositiveButton(
-                        "Check again"
-                    ) { _, _ -> viewModel.isOnline(this) }
-                val alert: AlertDialog = builder.create()
-                alert.show()
-            }
-        }
     }
+
 
     private fun refreshData() {
         if (viewModel.getMovieList(this)) Toast.makeText(

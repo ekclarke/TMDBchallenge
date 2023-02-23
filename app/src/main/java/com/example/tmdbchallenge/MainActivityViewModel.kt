@@ -24,9 +24,6 @@ class MainActivityViewModel : ViewModel() {
     private val _activeMovieId = MutableLiveData<Int>()
     val activeMovieId: LiveData<Int> = _activeMovieId
 
-    private val _onlineLiveData = MutableLiveData<Boolean>()
-    val onlineLiveData: LiveData<Boolean> = _onlineLiveData
-
     private val _configLoading = MutableLiveData(true)
     val configLoading: LiveData<Boolean> = _configLoading
 
@@ -80,19 +77,5 @@ class MainActivityViewModel : ViewModel() {
         return false
     }
 
-    fun isOnline(activity: Activity) {
-        val connectivityManager =
-            activity.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val capabilities =
-            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-        if (capabilities != null) {
-            if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                _onlineLiveData.value = true
-            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                _onlineLiveData.value = true
-            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                _onlineLiveData.value = true
-            }
-        } else _onlineLiveData.value = false
-    }
+
 }

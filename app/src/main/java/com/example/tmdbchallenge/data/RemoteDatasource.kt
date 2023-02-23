@@ -49,7 +49,7 @@ class RemoteDatasource {
         return retrofit.create(service)
     }
 
-    suspend fun getPopularMovies(page: Int, context: Context): Flow<List<MovieListing>> {
+    suspend fun getPopularMovies(page: Int, activity: Activity): Flow<List<MovieListing>> {
         return flow {
             val request = buildService(MovieApi::class.java)
             val call = request.getPopularMovies(page, API_KEY)
@@ -64,12 +64,12 @@ class RemoteDatasource {
                     movies = call.body()!!.results
                 }
             } else
-                ToastHelper.showErrorToast(context, "movies")
+                ToastHelper.showErrorToast(activity, "movies")
             emit(movies)
         }.flowOn(Dispatchers.IO)
     }
 
-    suspend fun getMovieDetails(id: Int, context: Context): Flow<MovieDetails> {
+    suspend fun getMovieDetails(id: Int, activity: Activity): Flow<MovieDetails> {
         return flow {
             val request = buildService(MovieApi::class.java)
             val call = request.getMovieDetails(id, API_KEY)
@@ -79,11 +79,11 @@ class RemoteDatasource {
                     emit(call.body()!!)
                 }
             } else
-                ToastHelper.showErrorToast(context, "movie details")
+                ToastHelper.showErrorToast(activity, "movie details")
         }.flowOn(Dispatchers.IO)
     }
 
-    suspend fun getCastList(id: Int, context: Context): Flow<List<Cast>> {
+    suspend fun getCastList(id: Int, activity: Activity): Flow<List<Cast>> {
         return flow {
             val request = buildService(MovieApi::class.java)
             val call = request.getCredits(id, API_KEY)
@@ -93,11 +93,11 @@ class RemoteDatasource {
                     emit(call.body()!!.cast)
                 }
             } else
-                ToastHelper.showErrorToast(context, "cast list")
+                ToastHelper.showErrorToast(activity, "cast list")
         }.flowOn(Dispatchers.IO)
     }
 
-    suspend fun getCastImages(id: Int, context: Context): Flow<List<Image>> {
+    suspend fun getCastImages(id: Int, activity: Activity): Flow<List<Image>> {
         return flow {
             val request = buildService(MovieApi::class.java)
             val call = request.getCastImages(id, API_KEY)
@@ -107,12 +107,12 @@ class RemoteDatasource {
                     emit(call.body()!!.profiles)
                 }
             } else
-                ToastHelper.showErrorToast(context, "cast images")
+                ToastHelper.showErrorToast(activity, "cast images")
 
         }.flowOn(Dispatchers.IO)
     }
 
-    suspend fun getMovieImages(id: Int, context: Context): Flow<List<Image>> {
+    suspend fun getMovieImages(id: Int, activity: Activity): Flow<List<Image>> {
         return flow {
             val request = buildService(MovieApi::class.java)
             val call = request.getMovieImages(id, API_KEY)
@@ -122,7 +122,7 @@ class RemoteDatasource {
                     emit(call.body()!!.posters)
                 }
             } else
-                ToastHelper.showErrorToast(context, "movie images")
+                ToastHelper.showErrorToast(activity, "movie images")
 
         }.flowOn(Dispatchers.IO)
     }
@@ -168,7 +168,7 @@ class RemoteDatasource {
                     emit(call.body()!!)
                 }
             } else
-                activity?.applicationContext?.let {
+                activity?.let {
                     ToastHelper.showErrorToast(
                         it,
                         "image configuration"
