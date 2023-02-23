@@ -27,9 +27,13 @@ class MainActivityViewModel : ViewModel() {
     private val _onlineLiveData = MutableLiveData<Boolean>()
     val onlineLiveData: LiveData<Boolean> = _onlineLiveData
 
+    private val _configLoading = MutableLiveData(true)
+    val configLoading: LiveData<Boolean> = _configLoading
+
     val repository = Repository()
 
     private var isBusy = false
+    private var isConfiguring = false
 
     private var page = 1
 
@@ -38,8 +42,13 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun configure(activity: Activity) {
+        isConfiguring = true
+        _configLoading.value = true
         viewModelScope.launch {
-            repository.getConfig(activity)
+            repository.getConfig(activity).collect {
+                isConfiguring = false
+                _configLoading.value = false
+            }
         }
     }
 

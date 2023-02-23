@@ -16,6 +16,7 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainActivityViewModel by viewModels()
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: MovieListingAdapter
+    private var isConfigured = false
 
     private val adapterListener = object : MovieListingAdapter.Listener {
         override fun onMovieClicked(id: Int) {
@@ -43,12 +44,21 @@ class MainActivity : AppCompatActivity() {
 
     private fun initLivedata() {
         viewModel.movieListLiveData.observe(this) { list ->
-            adapter.update(list)
+            if (isConfigured)
+                adapter.update(list)
         }
         viewModel.isLoading.observe(this) { loading ->
             if (loading)
                 binding.loadingIndicator.visibility = View.VISIBLE
             else binding.loadingIndicator.visibility = View.GONE
+        }
+        viewModel.configLoading.observe(this) { loading ->
+            if (loading)
+                binding.loadingIndicator.visibility = View.VISIBLE
+            else {
+                binding.loadingIndicator.visibility = View.GONE
+                isConfigured = true
+            }
         }
         viewModel.activeMovieId.observe(this) { id ->
             if (id > 0) {
@@ -60,7 +70,8 @@ class MainActivity : AppCompatActivity() {
                 val builder = AlertDialog.Builder(this)
                 builder.setMessage("Oops! It looks like you're offline.")
                     .setCancelable(false)
-                    .setPositiveButton("Check again"
+                    .setPositiveButton(
+                        "Check again"
                     ) { _, _ -> viewModel.isOnline(this) }
                 val alert: AlertDialog = builder.create()
                 alert.show()

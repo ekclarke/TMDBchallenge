@@ -16,7 +16,7 @@ object ImageHelper {
         )
     }
 
-    fun getPosterUrl(context: Context, option: Int): String {
+    fun getPosterUrl(context: Context, option: Int): String? {
        val posterSizeList =
            context.getSharedPreferences(
                context.getString(R.string.prefs_key),
@@ -25,11 +25,12 @@ object ImageHelper {
                 context.getString(R.string.poster_sizes_key),
                 mutableSetOf()
             )
+        if(posterSizeList?.isEmpty() == true) return null
         val posterSize = posterSizeList?.elementAt(option)
         return getBaseUrl(context) + "/" + posterSize
     }
 
-    fun getProfileUrl(context: Context, option: Int): String {
+    fun getProfileUrl(context: Context, option: Int): String? {
         val profileSizeList =
             context.getSharedPreferences(
                 context.getString(R.string.prefs_key),
@@ -38,11 +39,12 @@ object ImageHelper {
                 context.getString(R.string.profile_sizes_key),
                 mutableSetOf()
             )
+        if(profileSizeList?.isEmpty() == true) return null
         val profileSize = profileSizeList?.elementAt(option)
         return getBaseUrl(context) + "/" + profileSize
     }
 
-    fun getBackdropUrl(context: Context, option: Int): String {
+    fun getBackdropUrl(context: Context, option: Int): String? {
         val backdropSizeList =
             context.getSharedPreferences(
                 context.getString(R.string.prefs_key),
@@ -51,6 +53,7 @@ object ImageHelper {
                 context.getString(R.string.backdrop_sizes_key),
                 mutableSetOf()
             )
+        if(backdropSizeList?.isEmpty() == true) return null
         val backdropSize = backdropSizeList?.elementAt(option)
         return getBaseUrl(context) + "/" + backdropSize
     }

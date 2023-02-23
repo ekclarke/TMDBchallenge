@@ -12,16 +12,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -97,7 +96,6 @@ class DetailFragment : BottomSheetDialogFragment() {
                 .background(colorResource(id = R.color.yellow_100))
                 .fillMaxHeight(0.75F)
                 .fillMaxWidth(1F)
-                .padding(12.dp)
                 .verticalScroll(rememberScrollState(), enabled = true)
             //No native scrollbar support at this time unfortunately!
         ) {
@@ -114,48 +112,62 @@ class DetailFragment : BottomSheetDialogFragment() {
             0.0f to Color.Black,
             1.0f to Color.Transparent,
             startX = 0.0f,
-            endX = 1000.0f
+            endX = 1500.0f
         )
         Box(
             modifier = Modifier
-                .fillMaxWidth(1F)
+                .fillMaxWidth()
         ) {
+            val localDensity = LocalDensity.current
+            var imageHeight by remember {
+                mutableStateOf(0.dp)
+            }
+            var matchImage = false
+
             if (movie.backdrop_path != null && movie.backdrop_path != "") {
-                val backdropUrl = context?.let { ImageHelper.getBackdropUrl(it, 4) }
-                if (backdropUrl != "")
+                val backdropUrl = context?.let { ImageHelper.getBackdropUrl(it, 3) }
+                if (backdropUrl != "" && backdropUrl != null) {
+                    matchImage = true
                     GlideImage(
                         model = backdropUrl + movie.backdrop_path,
                         contentDescription = "Movie backdrop",
-                        Modifier
-                            .fillMaxWidth(1F)
-                            .align(Alignment.TopCenter)
-                    )
+                        contentScale = ContentScale.FillHeight,
+                        modifier = Modifier
+                            .onGloballyPositioned { coordinates ->
+                                imageHeight = with(localDensity) { coordinates.size.height.toDp() }
+                            })
+                }
             } else Image(
                 painter = painterResource(id = R.drawable.baseline_movie),
                 contentDescription = "Default movie icon",
                 Modifier.fillMaxWidth(1F)
             )
             Column(
-                Modifier
+                if (matchImage) Modifier
                     .background(gradient)
-                    .fillMaxWidth(1F)
-                    .fillMaxHeight(1F)
+                    .fillMaxWidth()
+                    .height(imageHeight)
+                else Modifier
+                    .background(gradient)
+                    .fillMaxWidth()
             ) {
                 if (movie.title != "") Text(
                     text = movie.title,
                     style = MaterialTheme.typography.h5,
                     color = colorResource(id = R.color.blue_200),
                     modifier = Modifier
-                        .fillMaxWidth(1F)
-                        .fillMaxHeight(1F)
+                        .fillMaxWidth(.6F)
+                        .padding(8.dp, 0.dp, 0.dp, 0.dp)
                 )
                 if (movie.status.toString() != "")
                     Text(
                         text = movie.status.toString().lowercase()
                             .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() },
-                        style = MaterialTheme.typography.h6,
-                        color = colorResource(id = R.color.white),
-                        modifier = Modifier.fillMaxWidth(.8F)
+                        style = MaterialTheme.typography.body1,
+                        color = colorResource(id = R.color.yellow_600),
+                        modifier = Modifier
+                            .fillMaxWidth(.6F)
+                            .padding(8.dp, 0.dp, 0.dp, 0.dp)
                     )
                 if (movie.release_date != "")
                     Text(
@@ -163,16 +175,20 @@ class DetailFragment : BottomSheetDialogFragment() {
                             movie.release_date,
                             LocalContext.current
                         ),
-                        style = MaterialTheme.typography.h6,
+                        style = MaterialTheme.typography.body1,
                         color = colorResource(id = R.color.white),
-                        modifier = Modifier.fillMaxWidth(.8F)
+                        modifier = Modifier
+                            .fillMaxWidth(.6F)
+                            .padding(8.dp, 0.dp, 0.dp, 0.dp)
                     )
                 if (movie.runtime != 0)
                     Text(
                         text = movie.runtime.toString() + " minutes",
-                        style = MaterialTheme.typography.h6,
+                        style = MaterialTheme.typography.body1,
                         color = colorResource(id = R.color.white),
-                        modifier = Modifier.fillMaxWidth(.8F)
+                        modifier = Modifier
+                            .fillMaxWidth(.6F)
+                            .padding(8.dp, 0.dp, 0.dp, 0.dp)
                     )
             }
         }
@@ -184,35 +200,40 @@ class DetailFragment : BottomSheetDialogFragment() {
         if (imageList.isEmpty() && castList.isNotEmpty()) {
             Text("Cast", style = MaterialTheme.typography.h6)
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxWidth()
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
             ) {
                 items(castList) { castMember ->
-                    Image(
-                        painter = painterResource(id = R.drawable.baseline_person),
-                        contentDescription = "Default cast member icon",
-                        Modifier.fillMaxWidth(.8F)
-                    )
-                    if (castMember.name != "") {
-                        Text(
-                            text = castMember.name,
-                            style = MaterialTheme.typography.body1
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Image(
+                            painter = painterResource(id = R.drawable.baseline_person),
+                            contentDescription = "Default cast member icon"
                         )
+                        if (castMember.name != "") {
+                            Text(
+                                text = castMember.name,
+                                style = MaterialTheme.typography.body2
+                            )
 
-                    }
-                    if (castMember.character != "") {
-                        Text(
-                            text = castMember.character,
-                            style = MaterialTheme.typography.body2
-                        )
+                        }
+                        if (castMember.character != "") {
+                            Text(
+                                text = castMember.character,
+                                style = MaterialTheme.typography.caption
+                            )
+                        }
                     }
                 }
             }
         } else if (imageList.isNotEmpty() && castList.isNotEmpty()) {
             Text("Cast", style = MaterialTheme.typography.h6)
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxWidth()
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
             )
             {
                 items(castList) { castMember ->
@@ -221,8 +242,8 @@ class DetailFragment : BottomSheetDialogFragment() {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             if (castImage.file_path != "") {
                                 val profileUrl =
-                                    context?.let { ImageHelper.getProfileUrl(it, 2) }
-                                if (profileUrl != "")
+                                    context?.let { ImageHelper.getProfileUrl(it, 3) }
+                                if (profileUrl != "" && profileUrl != null)
                                     GlideImage(
                                         model = profileUrl + castImage.file_path,
                                         contentDescription = "Cast member image",
@@ -259,24 +280,27 @@ class DetailFragment : BottomSheetDialogFragment() {
         if (postersList.isNotEmpty()) {
             Text("Posters", style = MaterialTheme.typography.h6)
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxWidth()
+                horizontalArrangement = Arrangement.spacedBy(
+                    12.dp
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+
             ) {
                 items(postersList) { item ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         if (item.file_path != "") {
                             val posterUrl =
                                 context?.let { ImageHelper.getPosterUrl(it, 1) }
-                            if (posterUrl != "")
+                            if (posterUrl != "" && posterUrl != null)
                                 GlideImage(
                                     model = posterUrl + item.file_path,
-                                    contentDescription = "Movie poster",
-                                    Modifier.fillMaxWidth(.8F)
+                                    contentDescription = "Movie poster"
                                 )
                         } else Image(
                             painter = painterResource(id = R.drawable.baseline_poster),
-                            contentDescription = "Default poster icon",
-                            Modifier.fillMaxWidth(.8F)
+                            contentDescription = "Default poster icon"
                         )
                     }
                 }

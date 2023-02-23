@@ -2,6 +2,7 @@ package com.example.tmdbchallenge.data
 
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tmdbchallenge.databinding.MovieItemBinding
@@ -61,21 +62,23 @@ class MovieListingAdapter(
 
         fun bind(movieListing: MovieListing) {
             if (movieListing.poster_path != null && movieListing.poster_path != "") {
+                binding.poster.visibility = View.VISIBLE
+                binding.textOnlyView.visibility = View.GONE
                 val posterUrl = ImageHelper.getPosterUrl(itemView.context, 3)
-                if (posterUrl != "")
+                if (posterUrl != "" && posterUrl != null)
                     ImageHelper.loadImage(
                         posterUrl + movieListing.poster_path,
                         binding.poster
                     )
-            }
-            else {
+            } else {
+                binding.poster.visibility = View.GONE
+                binding.textOnlyView.visibility = View.VISIBLE
                 binding.movieName.text = movieListing.title
                 binding.releaseDate.text =
                     DateHelper.getReleaseYear(movieListing.release_date, binding.root.context)
-
-                binding.root.setOnClickListener {
-                    listener.onMovieClicked(movieListing.id)
-                }
+            }
+            binding.root.setOnClickListener {
+                listener.onMovieClicked(movieListing.id)
             }
         }
     }
