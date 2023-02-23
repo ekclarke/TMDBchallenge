@@ -32,12 +32,7 @@ object OnlineHelper {
     fun showOnlineDialog(activity: Activity) {
         val builder = AlertDialog.Builder(activity)
         builder.setMessage("Oops! It looks like you're offline. Please turn wifi or data on and try again.")
-            .setCancelable(false)
-            .setPositiveButton(
-                "OK"
-            ) { _, _ ->
-                startActivity(activity, Intent(ACTION_SETTINGS), null)
-                activity.finishAndRemoveTask()
+            .setNegativeButton("OK") { _, _ ->
             }
         val alert: AlertDialog = builder.create()
         alert.show()

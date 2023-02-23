@@ -27,20 +27,29 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if(OnlineHelper.isOnline(this)) {
-            binding = ActivityMainBinding.inflate(layoutInflater)
-            setContentView(binding.root)
-            val recyclerView = binding.movieListRecyclerView
-            adapter = MovieListingAdapter(adapterListener)
-            recyclerView.layoutManager = GridLayoutManager(this, 3)
-            recyclerView.adapter = adapter
-            recyclerView.setHasFixedSize(true)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        val recyclerView = binding.movieListRecyclerView
+        adapter = MovieListingAdapter(adapterListener)
+        recyclerView.layoutManager = GridLayoutManager(this, 3)
+        recyclerView.adapter = adapter
+        recyclerView.setHasFixedSize(true)
+        initLivedata()
+        initListeners(recyclerView)
+        configureApp()
+        refreshData()
+    }
+
+    private fun configureApp() {
+        if (OnlineHelper.isOnline(this) && !isConfigured) {
             viewModel.configure(this)
-            initLivedata()
-            refreshData()
-            initListeners(recyclerView)
         }
-        else OnlineHelper.showOnlineDialog(this)
+    }
+
+    override fun onResume() {
+        configureApp()
+        refreshData()
+        super.onResume()
     }
 
     private fun initLivedata() {
@@ -70,11 +79,13 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun refreshData() {
-        if (viewModel.getMovieList(this)) Toast.makeText(
-            this@MainActivity,
-            "All data loaded.",
-            Toast.LENGTH_SHORT
-        ).show()
+        if (OnlineHelper.isOnline(this)) {
+            if (viewModel.getMovieList(this)) Toast.makeText(
+                this@MainActivity,
+                "All data loaded.",
+                Toast.LENGTH_SHORT
+            ).show()
+        } else OnlineHelper.showOnlineDialog(this)
     }
 
     private fun initListeners(recyclerView: RecyclerView) {
